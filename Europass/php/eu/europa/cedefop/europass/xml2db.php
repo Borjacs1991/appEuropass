@@ -44,7 +44,15 @@ $gender = NULL;
 foreach($identifications as $identification)
 {
     /* For each on of the list elements get the various elements included in the identification entity
-     * and load them in the corresponding variables. */
+     * and load them in the corresponding variables. 
+     * 
+     * 
+     * $*** will save the variable and prepare it to be inserted in the DB.
+     * We should create a check field for merge a current user or create a new user.
+     * Insert in to our DB tables as is used in the table mob_xml, all europass fields would be changed 
+     * by our DB fields.
+     * 
+     * */
     if ($identification->getElementsByTagName("FirstName") && $identification->getElementsByTagName("FirstName")->item(0)) {
         $firstname    = $identification->getElementsByTagName("FirstName")->item(0)->nodeValue;
     } else {$firstname = NULL;}
@@ -122,12 +130,33 @@ foreach($identifications as $identification)
     } else {$photo = NULL; $photo_type = NULL;}
 
     #Insert the first set of data in mob_xml table
+    /* Original MySql Querie
     mysqli_query($link,"INSERT INTO mob_xml (ID,  FNAME, LNAME, ADDRESS, MUNIC, POSTAL_CODE, CODE_COUNTRY, COUNTRY, PHONE,
 									  PHONE2, PHONE3, EMAIL, GENDER, BIRTHDATE, PHOTO_TYPE, PHOTO)
 							  VALUES (NULL,'$firstname','$lastname','$addressLine','$municipality','$postalCode','$code','$label',
 									  '$telephone','$telephone2','$telephone3','$email','$gender','$birthdate','$photo_type','$photo')")
                 or die('Could not insert data in Master XML table!!!!<br/><center><a href="index.html">Go Back</a></center>'.mysqli_error($link));
+    */
 
+    
+    /*
+
+    */
+
+    mysqli_query($link,"INSERT INTO recursos (ID,  nombre, apellidos, direccion, localidad, codigo_postal, codigo_pais, telefono,
+            telefono2, telefono3, email, sexo, fecha_nac)
+        VALUES (NULL,'$firstname','$lastname','$addressLine','$municipality','$postalCode','$code',
+            '$telephone','$telephone2','$telephone3','$email','$gender','$birthdate')")
+            or die('Could not insert data in Master XML table!!!!<br/><center><a href="index.html">Go Back</a></center>'.mysqli_error($link));
+
+    mysqli_query($link,"INSERT INTO paises (ID, cod, pais)
+        VALUES (NULL, '$code','$label')")
+            or die('Could not insert data in Master XML table!!!!<br/><center><a href="index.html">Go Back</a></center>'.mysqli_error($link));
+
+    mysqli_query($link,"INSERT INTO foto (ID, foto)
+        VALUES (NULL,'$photo')")
+            or die('Could not insert data in Master XML table!!!!<br/><center><a href="index.html">Go Back</a></center>'.mysqli_error($link));
+    
     /* Retrive the generated id for the insert.
      * We will use it later to update the master table along with the detail ones with the rest of the data.
      */
@@ -151,8 +180,8 @@ foreach($identifications as $identification)
         }
 
         #Insert the data in the mob_nationality table
-        mysqli_query($link,"INSERT INTO mob_nationality (ID, XML_ID, CODE, NATIONALITY)
-										  VALUES (NULL,'$xmlid','$ncode','$nlabel')")
+        mysqli_query($link,"INSERT INTO nacionalidad (ID, doc_identi, nacionalidad)
+										  VALUES (NULL, $ncode','$nlabel')")
                     or die('Could not insert data in Nationality Table<br/><center><a href="index.html">Go Back</a></center>'.mysqli_error($link));
     }
 }
@@ -258,12 +287,25 @@ if ($workexperiencelist->length > 0)
         }
 
         #Insert the data in the mob_work_experience table
+        /* Original code
         mysqli_query($link,"INSERT INTO mob_work_experience (ID, XML_ID, DAY_FROM, MONTH_FROM, YEAR_FROM, DAY_TO, MONTH_TO, YEAR_TO,
 													  WPOSITION, ACTIVITIES, EMPLOYER_NAME, EMPLOYER_ADDRESS,
 													  EMPLOYER_MUNIC, EMPLOYER_ZCODE, CODE_COUNTRY, COUNTRY, SECTOR)
 										  VALUES     (NULL,'$xmlid','$fday','$fmonth','$fyear','$tday','$tmonth','$tyear','$plabel','$wactivities',
 													  '$wname','$waddress','$wcity','$wpcode','$weccode','$weclabel','$weseccodelabel' )")
         or die('Could not insert data in Work Experience table!!!!<br/><center><a href="index.html">Go Back</a></center>'.mysqli_error($link));
+        */
+
+        /* Country_code has been delete, check original code */
+
+        mysqli_query($link,"INSERT INTO exp_laboral (ID, dia_inicio, mes_inicio, ano_inicio, dia_fin, mes_fin, ano_fin,
+                posicion, actividades, empresa_nombre, empresa_direccion,
+                empresa_municipio, empresa_zcode, pais, setor)
+            VALUES     (NULL,'$fday','$fmonth','$fyear','$tday','$tmonth','$tyear','$plabel','$wactivities',
+                '$wname','$waddress','$wcity','$wpcode', '$weclabel','$weseccodelabel' )")
+            or die('No se han podido insertar los datos en la tabla de Experiencia Profesional.<br/><center><a href="index.html">Go Back</a></center>'.mysqli_error($link));
+
+
 
     }
 
@@ -350,13 +392,25 @@ if ($educationlist->length > 0)
 
 
         #Insert the data in the mob_education table
-        mysqli_query($link,"INSERT INTO mob_education (ID, XML_ID, TITLE, SUBJECT, ORG_NAME, ORG_ADDRESS, ORG_MUNIC,
+        /* Origianl code 
+        mysqli_query($link,"INSERT INTO mob_education (ID, TITLE, SUBJECT, ORG_NAME, ORG_ADDRESS, ORG_MUNIC,
 											    ORG_ZCODE, CODE_COUNTRY, COUNTRY, CODE_LEVEL, EDULEVEL,CODE_EDU_FIELD,EDU_FIELD,
 												DAY_FROM, MONTH_FROM, YEAR_FROM, DAY_TO, MONTH_TO, YEAR_TO)
-										VALUES (NULL,'$xmlid','$title','$eskills','$ename','$eaddress','$ecity','$epcode',
+										VALUES (NULL, '$title','$eskills','$ename','$eaddress','$ecity','$epcode',
 												'$educcode','$educlabel','$edulcode','$edullabel','$edufcode','$eduflabel',
 												'$efday','$efmonth','$efyear','$etday','$etmonth','$etyear')")
                     or die('Could not insert data in Education table!!!!<br/><center><a href="index.html">Go Back</a></center>'.mysqli_error($link));
+        */
+
+
+        mysqli_query($link,"INSERT INTO exp_education (ID, titulo, SUBJECT, org_nombre, org_direccion, org_municipio,
+                org_zcode, CODE_COUNTRY, COUNTRY, edulevel, CODE_EDU_FIELD,EDU_FIELD,
+                DAY_FROM, MONTH_FROM, YEAR_FROM, DAY_TO, MONTH_TO, YEAR_TO)
+            VALUES (NULL, '$title','$eskills','$ename','$eaddress','$ecity','$epcode',
+                '$educcode','$educlabel','$edullabel','$edufcode','$eduflabel',
+                '$efday','$efmonth','$efyear','$etday','$etmonth','$etyear')")
+            or die('Could not insert data in Education table!!!!<br/><center><a href="index.html">Go Back</a></center>'.mysqli_error($link));
+
     }
 
 
